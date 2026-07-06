@@ -244,3 +244,100 @@ export const adminListUsers = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
+// ---------- VIP tiers ----------
+export const listVipTiers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.from("vip_tiers").select("*").order("level");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+// ---------- Daily OTP ----------
+export const getActiveOtp = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("daily_otps")
+      .select("id, reward_percent, expires_at, active_date, created_at")
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) return { otp: null, claimed: false };
+    const { data: claim } = await context.supabase
+      .from("otp_claims")
+      .select("id, amount, created_at")
+      .eq("user_id", context.userId)
+      .eq("otp_id", data.id)
+      .maybeSingle();
+    return { otp: data, claimed: !!claim, claim: claim ?? null };
+  });
+
+export const claimDailyOtp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { code: string }) =>
+    z.object({ code: z.string().min(3).max(30) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: reward, error } = await context.supabase.rpc("claim_daily_otp", { _code: data.code });
+    if (error) throw new Error(error.message);
+    return { reward: Number(reward ?? 0) };
+  });
+
+export const listMyOtpClaims = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("otp_claims")
+      .select("id, amount, vip_level, created_at, daily_otps(reward_percent, active_date)")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+// ---------- Admin OTP ----------
+export const adminListOtps = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("daily_otps").select("*").order("created_at", { ascending: false }).limit(60);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const adminCreateOtp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { code: string; reward_percent: number; hours_valid: number }) =>
+    z.object({
+      code: z.string().min(4).max(30),
+      reward_percent: z.number().min(0).max(100),
+      hours_valid: z.number().int().min(1).max(72),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase.rpc("admin_create_daily_otp", {
+      _code: data.code, _reward_percent: data.reward_percent, _hours_valid: data.hours_valid,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminOtpClaims = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { otp_id: string }) => z.object({ otp_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: rows, error } = await context.supabase
+      .from("otp_claims")
+      .select("id, amount, vip_level, created_at, profiles(email, full_name, username)")
+      .eq("otp_id", data.otp_id)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
