@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_otps: {
+        Row: {
+          active_date: string
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          reward_percent: number
+        }
+        Insert: {
+          active_date?: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          reward_percent?: number
+        }
+        Update: {
+          active_date?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          reward_percent?: number
+        }
+        Relationships: []
+      }
       deposits: {
         Row: {
           admin_remarks: string | null
@@ -87,6 +117,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      otp_claims: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          otp_id: string
+          user_id: string
+          vip_level: number
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          otp_id: string
+          user_id: string
+          vip_level?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          otp_id?: string
+          user_id?: string
+          vip_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otp_claims_otp_id_fkey"
+            columns: ["otp_id"]
+            isOneToOne: false
+            referencedRelation: "daily_otps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_methods: {
         Row: {
@@ -241,6 +306,36 @@ export type Database = {
         }
         Relationships: []
       }
+      vip_tiers: {
+        Row: {
+          color: string
+          created_at: string
+          daily_bonus_percent: number
+          level: number
+          min_deposit: number
+          name: string
+          perks: Json
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          daily_bonus_percent?: number
+          level: number
+          min_deposit?: number
+          name: string
+          perks?: Json
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          daily_bonus_percent?: number
+          level?: number
+          min_deposit?: number
+          name?: string
+          perks?: Json
+        }
+        Relationships: []
+      }
       wallets: {
         Row: {
           balance: number
@@ -312,6 +407,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_daily_otp: {
+        Args: { _code: string; _hours_valid?: number; _reward_percent?: number }
+        Returns: string
+      }
       admin_review_deposit: {
         Args: { _approve: boolean; _deposit_id: string; _remarks?: string }
         Returns: undefined
@@ -320,6 +419,7 @@ export type Database = {
         Args: { _approve: boolean; _remarks?: string; _wid: string }
         Returns: undefined
       }
+      claim_daily_otp: { Args: { _code: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -327,6 +427,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_vip_level: { Args: { _user_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
