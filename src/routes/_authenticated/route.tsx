@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMe, listMyNotifications } from "@/lib/api.functions";
-import { LayoutDashboard, Wallet, ArrowDownToLine, ArrowUpFromLine, History, Bell, User, Settings, Shield, LogOut, TrendingUp, Menu, X } from "lucide-react";
+import { LayoutDashboard, Wallet, ArrowDownToLine, ArrowUpFromLine, History, Bell, User, Settings, Shield, LogOut, TrendingUp, Menu, X, Gift, Crown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,8 @@ const NAV = [
   { to: "/wallet", label: "Wallet", icon: Wallet },
   { to: "/deposit", label: "Deposit", icon: ArrowDownToLine },
   { to: "/withdraw", label: "Withdraw", icon: ArrowUpFromLine },
+  { to: "/reward", label: "Daily Reward", icon: Gift },
+  { to: "/vip", label: "VIP Center", icon: Crown },
   { to: "/transactions", label: "Transactions", icon: History },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/profile", label: "Profile", icon: User },

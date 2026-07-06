@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMe } from "@/lib/api.functions";
-import { Shield, Users, ArrowDownToLine, ArrowUpFromLine, LayoutDashboard } from "lucide-react";
+import { Shield, Users, ArrowDownToLine, ArrowUpFromLine, LayoutDashboard, KeyRound, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -14,6 +14,8 @@ const TABS: { to: string; label: string; icon: any; exact?: boolean }[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/deposits", label: "Deposits", icon: ArrowDownToLine },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowUpFromLine },
+  { to: "/admin/otp", label: "Daily OTP", icon: KeyRound },
+  { to: "/admin/vip", label: "VIP", icon: Crown },
   { to: "/admin/users", label: "Users", icon: Users },
 ];
 
